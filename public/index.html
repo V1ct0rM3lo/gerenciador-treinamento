@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Treinamentos</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        h1,
+        h2 {
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 2rem;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        /* Estilos para a tabela */
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            /* Adicionando sombra na tabela */
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            /* Sombras nas células */
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            border-bottom: 2px solid #333;
+            /* Borda mais forte nas colunas */
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+            /* Cor de fundo alternada mais visível */
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+            /* Cor de fundo ao passar o mouse */
+        }
+
+        /* Estilos para a borda da tabela */
+        table,
+        th,
+        td {
+            border: 1px solid #ccc;
+            /* Borda mais contrastante */
+        }
+
+        /* Efeito para destacar linhas de expiração próxima */
+        .expiring-soon {
+            background-color: #ff000097 !important;
+            color: white;
+        }
+
+        .icon {
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 1.2rem;
+            color: #007bff;
+        }
+
+        .icon:hover {
+            color: #0056b3;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 50%;
+            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Estilos para o X de fechamento */
+        .close {
+            color: #fff;
+            /* Cor branca */
+            font-size: 30px;
+            /* Tamanho grande para o X */
+            font-weight: bold;
+            /* Deixa o X mais forte */
+            position: absolute;
+            top: 10px;
+            /* Ajusta a posição do X no topo */
+            right: 10px;
+            /* Ajusta a posição do X na direita */
+            cursor: pointer;
+            /* Mostra o cursor como mãozinha quando passar sobre o X */
+            transition: color 0.3s, transform 0.3s;
+            /* Adiciona transição suave */
+        }
+
+        .close:hover {
+            color: #ff0000;
+            /* Cor vermelha quando passar o mouse */
+            transform: scale(1.2);
+            /* Aumenta um pouco o tamanho do X ao passar o mouse */
+        }
+
+
+
+        .modal h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        form label {
+            font-size: 1rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        form button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        form button:hover {
+            background-color: #0056b3;
+        }
+
+        #searchEmployee,
+        #sortOption {
+            width: 350px;
+            /* Definindo largura menor */
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Gerenciamento de Treinamentos</h1>
+
+    <button id="addEmployeeBtn">Adicionar Funcionário</button>
+    <button id="addTrainingBtn">Adicionar Treinamento</button>
+
+    <h2>Treinamentos</h2>
+    <label for="searchEmployee">Pesquisar Funcionário:</label>
+    <input type="text" id="searchEmployee" placeholder="Digite o nome do funcionário">
+
+    <br><br>
+    <label for="sortOption">Ordenar por:</label>
+    <select id="sortOption">
+        <option value="name">Nome (A-Z)</option>
+        <option value="expiryDate">Data de Expiração (Menor para Maior)</option>
+    </select>
+
+    <div class="table-container">
+        <table id="trainingsTable">
+            <thead>
+                <tr>
+                    <th>Funcionário</th>
+                    <th>Tipo</th>
+                    <th>Data Feita</th>
+                    <th>Vence em</th>
+                    <th>Dias Restantes</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Modal para Adicionar Funcionário -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+
+            <h2>Adicionar Funcionário</h2>
+            <span class="close" id="close">&times;</span>
+            <form id="employeeForm">
+                <label for="employeeName">Nome:</label>
+                <input type="text" id="employeeName" required>
+                <button type="submit">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar Treinamento -->
+    <div id="trainingModal" class="modal">
+        <div class="modal-content">
+            <h2>Adicionar Treinamento</h2>
+            <span class="close" id="close">&times;</span>
+            <form id="trainingForm">
+                <label for="employeeId">Funcionário:</label>
+                <select id="employeeId" required></select>
+
+                <label for="trainingType">Tipo de Treinamento:</label>
+                <input type="text" id="trainingType" required>
+
+                <label for="trainingDate">Data Feita:</label>
+                <input type="date" id="trainingDate" required>
+
+                <label for="trainingExpiryDate">Data de Vencimento:</label>
+                <input type="date" id="trainingExpiryDate" required>
+
+                <button type="submit">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Treinamento -->
+    <div id="editTrainingModal" class="modal">
+        <div class="modal-content">
+            <h2>Editar Treinamento</h2>
+            <span class="close" id="close">&times;</span>
+            <form id="editTrainingForm">
+                <label for="editTrainingType">Tipo de Treinamento:</label>
+                <input type="text" id="editTrainingType" required>
+
+                <label for="editTrainingDate">Data Feita:</label>
+                <input type="date" id="editTrainingDate" required>
+
+                <button type="submit">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
+
+
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9eopj242tUSLVSL2u2u6lywkhX69H87w",
+            authDomain: "treinamento-system.firebaseapp.com",
+            projectId: "treinamento-system",
+            storageBucket: "treinamento-system.appspot.com",
+            messagingSenderId: "482716815088",
+            appId: "1:482716815088:web:bceb327cefed912b117c35",
+            measurementId: "G-6Y6EEVQC75"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Carregar treinamentos e exibir na tabela
+        document.getElementById("sortOption").addEventListener("change", function () {
+            loadTrainings();
+        });
+
+        // Função alterada para considerar o filtro de ordenação
+        async function loadTrainings() {
+            const trainingsTableBody = document.querySelector("#trainingsTable tbody");
+            trainingsTableBody.innerHTML = ""; // Limpa a tabela antes de carregar
+
+            const sortOption = document.getElementById("sortOption").value;
+            let trainings = [];
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "trainings"));
+
+                for (const trainingDoc of querySnapshot.docs) {
+                    const trainingData = trainingDoc.data();
+                    const employeeRef = doc(db, "employees", trainingData.employeeId);
+                    const employeeDoc = await getDoc(employeeRef);
+
+                    const employeeName = employeeDoc.exists() ? employeeDoc.data().name : "Desconhecido";
+                    const expiryDate = new Date(trainingData.expiryDate);
+                    const daysRemaining = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                    trainings.push({
+                        id: trainingDoc.id,
+                        employeeName,
+                        trainingData,
+                        expiryDate,
+                        daysRemaining
+                    });
+                }
+
+                // Ordenar de acordo com a opção selecionada
+                if (sortOption === "name") {
+                    trainings.sort((a, b) => a.employeeName.localeCompare(b.employeeName));
+                } else if (sortOption === "expiryDate") {
+                    trainings.sort((a, b) => a.expiryDate - b.expiryDate);
+                }
+
+                // Renderizar as linhas ordenadas
+                trainings.forEach(training => {
+                    const rowElement = document.createElement("tr");
+                    rowElement.dataset.id = training.id;
+                    rowElement.innerHTML = `
+                <td class="employee-name">${training.employeeName}</td>
+                <td>${training.trainingData.trainingType}</td>
+                <td>${training.trainingData.trainingDate}</td>
+                <td>${training.expiryDate.toISOString().split("T")[0]}</td>
+                <td>${training.daysRemaining > 0 ? training.daysRemaining : "Expirado"}</td>
+                <td>
+                    <span class="icon" onclick="editTraining('${training.id}', '${training.trainingData.employeeId}', '${training.trainingData.trainingType}', '${training.trainingData.trainingDate}')">&#9998;</span>
+                    <span class="icon" onclick="deleteTraining('${training.id}')">&#128465;</span>
+                </td>
+            `;
+
+                    if (training.daysRemaining < 100 || training.daysRemaining <= 0) {
+                        rowElement.classList.add("expiring-soon");
+                    }
+
+                    trainingsTableBody.appendChild(rowElement);
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar treinamentos:", error);
+            }
+        }
+
+
+        // Chamar a função para carregar os treinamentos ao iniciar
+        loadTrainings();
+
+
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = "none"; // Fecha o modal
+            }
+        }
+
+        document.querySelectorAll('.close').forEach(closeButton => {
+            closeButton.addEventListener('click', function () {
+                const modalId = this.closest('.modal').id; // Pega o ID do modal
+                closeModal(modalId);
+            });
+        });
+
+
+        document.getElementById("addEmployeeBtn").addEventListener("click", function () {
+            openModal("employeeModal");
+        });
+
+        document.getElementById("addTrainingBtn").addEventListener("click", function () {
+            openModal("trainingModal");
+            loadEmployees();
+        });
+
+        async function loadEmployees() {
+            const employeeSelect = document.getElementById("employeeId");
+            employeeSelect.innerHTML = "<option value=''>Selecione um funcionário</option>";
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "employees"));
+                querySnapshot.forEach((doc) => {
+                    const option = document.createElement("option");
+                    option.value = doc.id;
+                    option.textContent = doc.data().name;
+                    employeeSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Erro ao carregar funcionários:", error);
+            }
+        }
+
+        document.getElementById("employeeForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const name = document.getElementById("employeeName").value;
+
+            try {
+                await addDoc(collection(db, "employees"), { name });
+                alert("Funcionário adicionado com sucesso!");
+                closeModal("employeeModal");
+                document.getElementById("employeeForm").reset();
+                loadEmployees();
+            } catch (error) {
+                console.error("Erro ao adicionar funcionário:", error);
+            }
+        });
+        document.getElementById("trainingForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const employeeId = document.getElementById("employeeId").value;
+            const trainingType = document.getElementById("trainingType").value;
+            const trainingDate = document.getElementById("trainingDate").value;
+            const expiryDate = document.getElementById("trainingExpiryDate").value; // PEGANDO A DATA DE VENCIMENTO
+
+            if (!employeeId || !trainingType || !trainingDate || !expiryDate) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "trainings"), {
+                    employeeId,
+                    trainingType,
+                    trainingDate,
+                    expiryDate // SALVANDO A DATA DE VENCIMENTO NO BANCO
+                });
+                alert("Treinamento adicionado com sucesso!");
+                closeModal("trainingModal");
+                document.getElementById("trainingForm").reset();
+                loadTrainings();
+            } catch (error) {
+                console.error("Erro ao adicionar treinamento:", error);
+            }
+        });
+
+
+
+        function editTraining(trainingId, employeeId, trainingType, trainingDate) {
+            openModal("editTrainingModal");
+
+            document.getElementById("editTrainingType").value = trainingType;
+            document.getElementById("editTrainingDate").value = trainingDate;
+
+            document.getElementById("editTrainingForm").onsubmit = async function (event) {
+                event.preventDefault();
+
+                const updatedTrainingType = document.getElementById("editTrainingType").value;
+                const updatedTrainingDate = document.getElementById("editTrainingDate").value;
+
+                try {
+                    const trainingRef = doc(db, "trainings", trainingId);
+                    await updateDoc(trainingRef, {
+                        trainingType: updatedTrainingType,
+                        trainingDate: updatedTrainingDate,
+                    });
+                    alert("Treinamento atualizado com sucesso!");
+                    closeModal("editTrainingModal");
+                    loadTrainings();
+                } catch (error) {
+                    console.error("Erro ao atualizar treinamento:", error);
+                }
+            };
+        }
+
+        async function deleteTraining(trainingId) {
+            const confirmDelete = confirm("Tem certeza de que deseja excluir este treinamento?");
+            if (confirmDelete) {
+                try {
+                    const trainingRef = doc(db, "trainings", trainingId);
+                    await deleteDoc(trainingRef);
+                    alert("Treinamento excluído com sucesso!");
+                    loadTrainings();
+                } catch (error) {
+                    console.error("Erro ao excluir treinamento:", error);
+                }
+            }
+        }
+
+        document.getElementById("searchEmployee").addEventListener("input", function () {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll("#trainingsTable tbody tr");
+
+            rows.forEach(row => {
+                const employeeName = row.querySelector(".employee-name").textContent.toLowerCase();
+                if (employeeName.includes(filter)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+
+
+
+
+
+    </script>
+</body>
+
+</html>
