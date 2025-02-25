@@ -284,22 +284,29 @@
         </div>
     </div>
 
-    <!-- Modal para Editar Treinamento -->
-    <div id="editTrainingModal" class="modal">
+    <!-- Modal para Edição -->
+    <div id="editModal" class="modal">
         <div class="modal-content">
+            <span class="close" onclick="closeModal('editModal')">×</span>
             <h2>Editar Treinamento</h2>
-            <span class="close" id="close">&times;</span>
-            <form id="editTrainingForm">
+            <form id="editForm">
+                <label for="editEmployeeId">Funcionário:</label>
+                <input type="text" id="editEmployeeId" disabled><br><br>
+
                 <label for="editTrainingType">Tipo de Treinamento:</label>
-                <input type="text" id="editTrainingType" required>
+                <input type="text" id="editTrainingType"><br><br>
 
                 <label for="editTrainingDate">Data Feita:</label>
-                <input type="date" id="editTrainingDate" required>
+                <input type="date" id="editTrainingDate"><br><br>
 
-                <button type="submit">Salvar Alterações</button>
+                <label for="editTrainingExpiryDate">Data de Vencimento:</label>
+                <input type="date" id="editTrainingExpiryDate"><br><br>
+
+                <button type="submit">Salvar</button>
             </form>
         </div>
     </div>
+
 
 
 
@@ -373,10 +380,11 @@
                 <td>${training.trainingData.trainingDate}</td>
                 <td>${training.expiryDate.toISOString().split("T")[0]}</td>
                 <td>${training.daysRemaining > 0 ? training.daysRemaining : "Expirado"}</td>
-                <td>
-                    <span class="icon" onclick="editTraining('${training.id}', '${training.trainingData.employeeId}', '${training.trainingData.trainingType}', '${training.trainingData.trainingDate}')">&#9998;</span>
-                    <span class="icon" onclick="deleteTraining('${training.id}')">&#128465;</span>
-                </td>
+               <td>
+    <button class="edit-btn" data-id="${training.id}">Editar</button>
+    <button class="delete-btn" data-id="${training.id}">Deletar</button>
+</td>
+
             `;
 
                     if (training.daysRemaining < 100 || training.daysRemaining <= 0) {
@@ -486,48 +494,6 @@
         });
 
 
-
-        function editTraining(trainingId, employeeId, trainingType, trainingDate) {
-            openModal("editTrainingModal");
-
-            document.getElementById("editTrainingType").value = trainingType;
-            document.getElementById("editTrainingDate").value = trainingDate;
-
-            document.getElementById("editTrainingForm").onsubmit = async function (event) {
-                event.preventDefault();
-
-                const updatedTrainingType = document.getElementById("editTrainingType").value;
-                const updatedTrainingDate = document.getElementById("editTrainingDate").value;
-
-                try {
-                    const trainingRef = doc(db, "trainings", trainingId);
-                    await updateDoc(trainingRef, {
-                        trainingType: updatedTrainingType,
-                        trainingDate: updatedTrainingDate,
-                    });
-                    alert("Treinamento atualizado com sucesso!");
-                    closeModal("editTrainingModal");
-                    loadTrainings();
-                } catch (error) {
-                    console.error("Erro ao atualizar treinamento:", error);
-                }
-            };
-        }
-
-        async function deleteTraining(trainingId) {
-            const confirmDelete = confirm("Tem certeza de que deseja excluir este treinamento?");
-            if (confirmDelete) {
-                try {
-                    const trainingRef = doc(db, "trainings", trainingId);
-                    await deleteDoc(trainingRef);
-                    alert("Treinamento excluído com sucesso!");
-                    loadTrainings();
-                } catch (error) {
-                    console.error("Erro ao excluir treinamento:", error);
-                }
-            }
-        }
-
         document.getElementById("searchEmployee").addEventListener("input", function () {
             const filter = this.value.toLowerCase();
             const rows = document.querySelectorAll("#trainingsTable tbody tr");
@@ -542,6 +508,84 @@
             });
         });
 
+        // Adicionar evento de clique no botão "Editar"
+        document.addEventListener("click", (event) => {
+            if (event.target && event.target.classList.contains("edit-btn")) {
+                const trainingId = event.target.getAttribute("data-id");
+                openEditModal(trainingId);
+            }
+        });
+
+        // Função para abrir o modal de edição
+        async function openEditModal(trainingId) {
+            // Obtenha os dados do treinamento
+            const trainingRef = doc(db, "trainings", trainingId);
+            const trainingDoc = await getDoc(trainingRef);
+
+            if (trainingDoc.exists()) {
+                const trainingData = trainingDoc.data();
+
+                // Preencher os campos do modal com os dados atuais
+                document.getElementById("editEmployeeId").value = trainingData.employeeId;
+                document.getElementById("editTrainingType").value = trainingData.trainingType;
+                document.getElementById("editTrainingDate").value = trainingData.trainingDate;
+                document.getElementById("editTrainingExpiryDate").value = trainingData.expiryDate;
+
+                // Exibir o modal
+                openModal('editModal');
+
+                // Adicionar a função para salvar as edições
+                document.getElementById("editForm").onsubmit = async (event) => {
+                    event.preventDefault();
+
+                    // Obtenha os novos valores
+                    const updatedTraining = {
+                        trainingType: document.getElementById("editTrainingType").value,
+                        trainingDate: document.getElementById("editTrainingDate").value,
+                        expiryDate: document.getElementById("editTrainingExpiryDate").value,
+                    };
+
+                    try {
+                        // Atualize os dados no Firebase
+                        await updateDoc(trainingRef, updatedTraining);
+
+                        // Feche o modal e recarregue a tabela
+                        closeModal('editModal');
+                        loadTrainings();
+                    } catch (error) {
+                        console.error("Erro ao atualizar o treinamento:", error);
+                    }
+                };
+            }
+        }
+
+        // Adicionar evento de clique no botão "Deletar"
+        document.addEventListener("click", (event) => {
+            if (event.target && event.target.classList.contains("delete-btn")) {
+                const trainingId = event.target.getAttribute("data-id");
+                deleteTraining(trainingId);
+            }
+        });
+
+        // Função para deletar o treinamento
+        async function deleteTraining(trainingId) {
+            const confirmDelete = confirm("Você tem certeza que deseja excluir este treinamento?");
+
+            if (confirmDelete) {
+                try {
+                    // Referência ao documento do treinamento no Firebase
+                    const trainingRef = doc(db, "trainings", trainingId);
+
+                    // Deletando o documento do treinamento
+                    await deleteDoc(trainingRef);
+
+                    // Recarregar a tabela de treinamentos
+                    loadTrainings();
+                } catch (error) {
+                    console.error("Erro ao deletar o treinamento:", error);
+                }
+            }
+        }
 
 
 
